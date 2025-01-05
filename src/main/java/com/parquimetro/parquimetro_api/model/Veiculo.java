@@ -14,7 +14,7 @@ public class Veiculo implements Serializable {
     @Id
     private String id;
 
-    @Indexed(unique = true)
+    @Indexed(unique = true, background = true)
     private String placa;
 
     private String modelo;
