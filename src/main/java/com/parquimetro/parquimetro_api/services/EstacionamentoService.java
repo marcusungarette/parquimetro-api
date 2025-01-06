@@ -14,6 +14,9 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.time.LocalDateTime;
 import java.time.Duration;
 import java.util.List;
@@ -79,10 +82,15 @@ public class EstacionamentoService {
                 .orElseThrow(() -> new EntityNotFoundException("Estacionamento não encontrado"));
     }
 
-    @Cacheable(value = CACHE_ESTACIONAMENTOS_ATIVOS, unless = "#result.isEmpty()")
-    public List<Estacionamento> listarEstacionamentosAtivos() {
-        return estacionamentoRepository.findAllAtivos();
+    @Cacheable(value = CACHE_ESTACIONAMENTOS_ATIVOS, key = "#pageable.pageNumber + '_' + #pageable.pageSize")
+    public Page<Estacionamento> listarEstacionamentosAtivos(Pageable pageable) {
+        return estacionamentoRepository.findAllAtivos(pageable);
     }
+
+    public Page<Estacionamento> buscarEstacionamentosPorVeiculo(String veiculoId, StatusEstacionamento status, Pageable pageable) {
+        return estacionamentoRepository.findByVeiculoIdAndStatus(veiculoId, status, pageable);
+    }
+
 
     @Cacheable(value = CACHE_ESTACIONAMENTOS_ATIVOS, key = "'count'")
     public long contarEstacionamentosAtivos() {

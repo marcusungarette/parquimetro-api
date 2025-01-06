@@ -1,11 +1,18 @@
 package com.parquimetro.parquimetro_api.controller;
 
 import com.parquimetro.parquimetro_api.model.Veiculo;
+import com.parquimetro.parquimetro_api.model.Estacionamento;
+import com.parquimetro.parquimetro_api.model.StatusEstacionamento;
 import com.parquimetro.parquimetro_api.services.VeiculoService;
+import com.parquimetro.parquimetro_api.services.EstacionamentoService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 public class VeiculoController {
 
     private final VeiculoService veiculoService;
+    private final EstacionamentoService estacionamentoService;
 
     @PostMapping
     @Operation(summary = "Cadastrar veículo", description = "Cadastra um novo veículo no sistema")
@@ -44,5 +52,26 @@ public class VeiculoController {
     public ResponseEntity<Void> removerVeiculo(@PathVariable String id) {
         veiculoService.removerVeiculo(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/estacionamentos")
+    @Operation(summary = "Histórico de estacionamentos", description = "Lista o histórico de estacionamentos do veículo")
+    public ResponseEntity<Page<Estacionamento>> listarHistoricoEstacionamentos(
+            @PathVariable String id,
+            @Parameter(description = "Status do estacionamento (opcional)")
+            @RequestParam(required = false) StatusEstacionamento status,
+            @Parameter(description = "Número da página (começa em 0)")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Tamanho da página")
+            @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Campo para ordenação")
+            @RequestParam(defaultValue = "entrada") String sort,
+            @Parameter(description = "Direção da ordenação (ASC ou DESC)")
+            @RequestParam(defaultValue = "DESC") String direction) {
+
+        Sort.Direction sortDirection = Sort.Direction.fromString(direction.toUpperCase());
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+
+        return ResponseEntity.ok(estacionamentoService.buscarEstacionamentosPorVeiculo(id, status, pageRequest));
     }
 }
