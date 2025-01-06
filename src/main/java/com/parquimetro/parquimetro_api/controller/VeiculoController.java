@@ -17,6 +17,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.concurrent.CompletableFuture;
+
 @RestController
 @RequestMapping("/api/veiculos")
 @RequiredArgsConstructor
@@ -56,7 +58,8 @@ public class VeiculoController {
 
     @GetMapping("/{id}/estacionamentos")
     @Operation(summary = "Histórico de estacionamentos", description = "Lista o histórico de estacionamentos do veículo")
-    public ResponseEntity<Page<Estacionamento>> listarHistoricoEstacionamentos(
+    public CompletableFuture<ResponseEntity<Page<Estacionamento>>> listarHistoricoEstacionamentos(
+            @Parameter(description = "ID do veículo")
             @PathVariable String id,
             @Parameter(description = "Status do estacionamento (opcional)")
             @RequestParam(required = false) StatusEstacionamento status,
@@ -72,6 +75,7 @@ public class VeiculoController {
         Sort.Direction sortDirection = Sort.Direction.fromString(direction.toUpperCase());
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(sortDirection, sort));
 
-        return ResponseEntity.ok(estacionamentoService.buscarEstacionamentosPorVeiculo(id, status, pageRequest));
+        return estacionamentoService.buscarEstacionamentosPorVeiculo(id, status, pageRequest)
+                .thenApply(ResponseEntity::ok);
     }
 }

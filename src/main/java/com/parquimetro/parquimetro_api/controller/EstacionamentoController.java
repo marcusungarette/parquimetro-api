@@ -13,6 +13,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.concurrent.CompletableFuture;
+
 @RestController
 @RequestMapping("/api/estacionamentos")
 @RequiredArgsConstructor
@@ -23,21 +25,23 @@ public class EstacionamentoController {
 
     @PostMapping("/iniciar")
     @Operation(summary = "Iniciar estacionamento", description = "Inicia um novo período de estacionamento para um veículo")
-    @ApiResponse(responseCode = "201", description = "Estacionamento iniciado com sucesso")
-    public ResponseEntity<Estacionamento> iniciarEstacionamento(@RequestParam String veiculoId) {
-        return ResponseEntity.ok(estacionamentoService.iniciarEstacionamento(veiculoId));
+    public CompletableFuture<ResponseEntity<Estacionamento>> iniciarEstacionamento(@RequestParam String veiculoId) {
+        return estacionamentoService.iniciarEstacionamento(veiculoId)
+                .thenApply(ResponseEntity::ok);
     }
 
     @PostMapping("/{id}/finalizar")
     @Operation(summary = "Finalizar estacionamento", description = "Finaliza um período de estacionamento e calcula o valor")
-    public ResponseEntity<Estacionamento> finalizarEstacionamento(@PathVariable String id) {
-        return ResponseEntity.ok(estacionamentoService.finalizarEstacionamento(id));
+    public CompletableFuture<ResponseEntity<Estacionamento>> finalizarEstacionamento(@PathVariable String id) {
+        return estacionamentoService.finalizarEstacionamento(id)
+                .thenApply(ResponseEntity::ok);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar estacionamento", description = "Busca um estacionamento pelo ID")
-    public ResponseEntity<Estacionamento> buscarEstacionamento(@PathVariable String id) {
-        return ResponseEntity.ok(estacionamentoService.buscarEstacionamento(id));
+    public CompletableFuture<ResponseEntity<Estacionamento>> buscarEstacionamento(@PathVariable String id) {
+        return estacionamentoService.buscarEstacionamento(id)
+                .thenApply(ResponseEntity::ok);
     }
 
     @GetMapping("/ativos")
@@ -56,11 +60,5 @@ public class EstacionamentoController {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(sortDirection, sort));
 
         return ResponseEntity.ok(estacionamentoService.listarEstacionamentosAtivos(pageRequest));
-    }
-
-    @GetMapping("/ativos/total")
-    @Operation(summary = "Contar estacionamentos ativos", description = "Retorna o número total de estacionamentos ativos")
-    public ResponseEntity<Long> contarEstacionamentosAtivos() {
-        return ResponseEntity.ok(estacionamentoService.contarEstacionamentosAtivos());
     }
 }
